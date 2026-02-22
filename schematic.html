@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD-HTC Fuel-Enhanced Gas Power Cycle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --box-bg: rgba(30, 41, 59, 0.7);
+            --box-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-yellow: #eab308;
+            --accent-purple: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0b0f19 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(129, 140, 248, 0.3);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .diagram-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--box-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* SVG Styles */
+        svg {
+            width: 100%;
+            height: 100%;
+            min-height: 700px;
+        }
+
+        .node {
+            fill: url(#glass-gradient);
+            stroke: var(--box-border);
+            stroke-width: 1.5;
+            rx: 12;
+            ry: 12;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+            transition: all 0.3s ease;
+        }
+
+        .node:hover {
+            stroke: rgba(255, 255, 255, 0.4);
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4));
+        }
+
+        .node-text {
+            fill: var(--text-main);
+            font-size: 13px;
+            font-weight: 600;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .node-subtext {
+            fill: var(--text-muted);
+            font-size: 11px;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        /* Flow lines */
+        .flow-path {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .flow-path.base {
+            stroke: rgba(255, 255, 255, 0.1);
+        }
+
+        .flow-path.animated {
+            stroke-dasharray: 10 10;
+            animation: flow 1.5s linear infinite;
+        }
+
+        /* Glow formats */
+        .glow-green {
+            stroke: var(--accent-green);
+            filter: drop-shadow(0 0 8px var(--accent-green));
+        }
+
+        .glow-orange {
+            stroke: var(--accent-orange);
+            filter: drop-shadow(0 0 8px var(--accent-orange));
+        }
+
+        .glow-blue {
+            stroke: var(--accent-blue);
+            filter: drop-shadow(0 0 8px var(--accent-blue));
+        }
+
+        .glow-red {
+            stroke: var(--accent-red);
+            filter: drop-shadow(0 0 8px var(--accent-red));
+        }
+
+        .glow-yellow {
+            stroke: var(--accent-yellow);
+            filter: drop-shadow(0 0 8px var(--accent-yellow));
+        }
+
+        .glow-purple {
+            stroke: var(--accent-purple);
+            filter: drop-shadow(0 0 8px var(--accent-purple));
+        }
+
+        @keyframes flow {
+            from {
+                stroke-dashoffset: 20;
+            }
+
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .shaft-line {
+            stroke: #475569;
+            stroke-width: 6;
+            stroke-dasharray: 20 10;
+        }
+
+        .shaft-rotator {
+            transform-origin: 900px 525px;
+            animation: spin 2.5s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Labels for flows */
+        .flow-label {
+            fill: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+        }
+
+        .pulse-circle {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                r: 18;
+                stroke-width: 2;
+                stroke: rgba(59, 130, 246, 0.8);
+            }
+
+            50% {
+                r: 21;
+                stroke-width: 4;
+                stroke: rgba(59, 130, 246, 1);
+                filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
+            }
+
+            100% {
+                r: 18;
+                stroke-width: 2;
+                stroke: rgba(59, 130, 246, 0.8);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>AD-HTC Fuel-Enhanced Gas Power Cycle</h1>
+            <p>Interactive Process Flow Integration</p>
+        </div>
+
+        <div class="diagram-container">
+            <svg viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="glass-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="rgba(30, 41, 59, 0.9)" />
+                        <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)" />
+                    </linearGradient>
+
+                    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                        orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                        orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+                    </marker>
+                    <marker id="arrow-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                        orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#eab308" />
+                    </marker>
+                    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                        orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+                    </marker>
+                    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                        orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
+                    </marker>
+                    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+                        orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6" />
+                    </marker>
+                </defs>
+
+                <!-- FLOW PATHS BASE (Static Background Lines) -->
+                <path d="M 30 150 L 115 150" class="flow-path base" />
+                <path d="M 220 130 L 710 130 L 710 200 L 690 200" class="flow-path base" />
+                <path d="M 170 200 L 170 340 L 320 340" class="flow-path base" />
+                <path d="M 630 175 L 400 175" class="flow-path base" />
+                <path d="M 630 200 L 570 200 L 570 240" class="flow-path base" />
+                <path d="M 400 300 L 480 300 L 480 200 L 570 200" class="flow-path base" />
+                <path d="M 260 242 L 260 175 L 320 175" class="flow-path base" />
+                <path d="M 400 190 L 440 190 L 440 310 L 400 310" class="flow-path base" />
+                <path d="M 320 310 L 260 310 L 260 278" class="flow-path base" />
+                <path d="M 360 360 L 360 430" class="flow-path base" />
+                <path d="M 570 320 L 570 420" class="flow-path base" />
+                <path d="M 610 280 L 800 280" class="flow-path base" />
+                <path d="M 350 640 L 350 553" class="flow-path base" />
+                <path d="M 420 525 L 470 525" class="flow-path base" />
+                <path d="M 670 525 L 720 525" class="flow-path base" />
+                <path d="M 790 554 L 790 640" class="flow-path base" />
+
+                <!-- ANIMATED FLOW PATHS -->
+                <path d="M 30 150 L 115 150" class="flow-path animated glow-green" marker-end="url(#arrow-green)" />
+                <path d="M 220 130 L 710 130 L 710 200 L 695 200" class="flow-path animated glow-green"
+                    marker-end="url(#arrow-green)" />
+                <path d="M 170 200 L 170 340 L 315 340" class="flow-path animated glow-orange"
+                    marker-end="url(#arrow-orange)" />
+                <path d="M 630 175 L 405 175" class="flow-path animated glow-red" marker-end="url(#arrow-red)" />
+                <path d="M 630 200 L 570 200 L 570 235" class="flow-path animated glow-yellow"
+                    marker-end="url(#arrow-yellow)" />
+                <path d="M 400 300 L 480 300 L 480 200 L 565 200" class="flow-path animated glow-purple"
+                    marker-end="url(#arrow-purple)" />
+                <path d="M 260 242 L 260 175 L 315 175" class="flow-path animated glow-blue"
+                    marker-end="url(#arrow-blue)" />
+                <path d="M 400 190 L 440 190 L 440 310 L 405 310" class="flow-path animated glow-blue"
+                    marker-end="url(#arrow-blue)" />
+                <path d="M 320 310 L 260 310 L 260 285" class="flow-path animated glow-blue"
+                    marker-end="url(#arrow-blue)" />
+                <path d="M 360 360 L 360 425" class="flow-path animated glow-red" marker-end="url(#arrow-red)" />
+                <path d="M 570 320 L 570 415" class="flow-path animated glow-yellow" marker-end="url(#arrow-yellow)" />
+                <path d="M 610 280 L 795 280" class="flow-path animated glow-yellow" marker-end="url(#arrow-yellow)" />
+                <path d="M 350 640 L 350 560" class="flow-path animated glow-blue" marker-end="url(#arrow-blue)" />
+                <path d="M 420 525 L 465 525" class="flow-path animated glow-blue" marker-end="url(#arrow-blue)" />
+                <path d="M 670 525 L 715 525" class="flow-path animated glow-red" marker-end="url(#arrow-red)" />
+                <path d="M 790 554 L 790 635" class="flow-path animated glow-purple" marker-end="url(#arrow-purple)" />
+
+                <!-- Shaft Line -->
+                <line x1="220" y1="525" x2="920" y2="525" class="shaft-line" />
+
+                <!-- COMPONENTS -->
+
+                <!-- Homogenizer -->
+                <g transform="translate(120, 100)">
+                    <rect width="100" height="100" class="node" />
+                    <text x="50" y="40" class="node-text">Biomass</text>
+                    <text x="50" y="55" class="node-text">Feedstock</text>
+                    <text x="50" y="70" class="node-subtext">Homogenizer</text>
+                </g>
+
+                <!-- Reactor -->
+                <g transform="translate(320, 290)">
+                    <rect width="80" height="70" class="node" />
+                    <text x="40" y="40" class="node-text">Reactor</text>
+                </g>
+
+                <!-- Boiler -->
+                <g transform="translate(320, 150)">
+                    <rect width="80" height="50" class="node" />
+                    <text x="40" y="30" class="node-text">Boiler</text>
+                </g>
+
+                <!-- Pump -->
+                <g transform="translate(260, 260)">
+                    <circle cx="0" cy="0" r="18" fill="rgba(30, 41, 59, 1)" stroke="#38bdf8" stroke-width="2"
+                        class="pulse-circle" />
+                    <polygon points="-8,8 0,-8 8,8" fill="#38bdf8" />
+                    <text x="-40" y="-20" class="node-text">Pump</text>
+                </g>
+
+                <!-- AD -->
+                <g transform="translate(630, 170)">
+                    <rect width="60" height="60" class="node" />
+                    <text x="30" y="35" class="node-text">AD</text>
+                </g>
+
+                <!-- Collector -->
+                <g transform="translate(530, 240)">
+                    <rect width="80" height="80" class="node" />
+                    <text x="40" y="35" class="node-text">Enhanced</text>
+                    <text x="40" y="50" class="node-text">Biogas</text>
+                    <text x="40" y="65" class="node-subtext">Collector</text>
+                </g>
+
+                <!-- Combustion Chamber -->
+                <g transform="translate(470, 420)">
+                    <rect width="200" height="130" class="node" rx="16" ry="16" />
+                    <!-- Inner chamber visualization -->
+                    <path d="M 80,0 L 80,80 L 120,80 L 120,60 L 100,60 L 100,0 Z" fill="rgba(234, 179, 8, 0.15)"
+                        stroke="var(--accent-yellow)" stroke-width="2"
+                        filter="drop-shadow(0 0 10px rgba(234, 179, 8, 0.4))" />
+                    <text x="100" y="100" class="node-text">Biogas Combustion</text>
+                    <text x="100" y="115" class="node-subtext">Chamber</text>
+                </g>
+
+                <!-- Compressor -->
+                <polygon points="320,490 420,510 420,540 320,560" class="node" />
+                <text x="370" y="530" class="node-text">Compressor</text>
+
+                <!-- Turbine -->
+                <polygon points="720,510 820,490 820,560 720,540" class="node" />
+                <text x="770" y="530" class="node-text">Turbine</text>
+
+                <!-- Rotating Shaft Indicator -->
+                <g class="shaft-rotator">
+                    <circle cx="900" cy="525" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" />
+                    <path d="M 900 495 A 30 30 0 0 1 930 525" fill="none" class="glow-blue" stroke-width="4"
+                        marker-end="url(#arrow-blue)" />
+                    <path d="M 900 555 A 30 30 0 0 1 870 525" fill="none" class="glow-blue" stroke-width="4"
+                        marker-end="url(#arrow-blue)" />
+                </g>
+
+                <!-- TEXT LABELS -->
+                <text x="0" y="130" class="flow-label">Biomass Feedstock</text>
+                <text x="600" y="100" class="flow-label" fill="#10b981">Moisture-rich Biomass</text>
+                <text x="600" y="115" class="flow-label" fill="#10b981">Feedstock</text>
+                <text x="140" y="360" class="flow-label" fill="#f59e0b">Moisture-lean Biomass</text>
+                <text x="140" y="375" class="flow-label" fill="#f59e0b">Feedstock</text>
+                <text x="300" y="250" class="flow-label" fill="#8b5cf6">HTC Steam Cycle</text>
+                <text x="310" y="450" class="flow-label" fill="#8b5cf6">Volatile Matters</text>
+
+                <text x="310" y="465" class="flow-label" fill="#8b5cf6">and Feedstock Waste</text>
+                <text x="810" y="275" class="flow-label" fill="#eab308">Biogas to</text>
+                <text x="810" y="290" class="flow-label" fill="#eab308">Building Envelopes</text>
+                <text x="350" y="660" class="flow-label" fill="#3b82f6">Air In</text>
+                <text x="790" y="660" class="flow-label" fill="#ef4444">Exhaust Gases</text>
+
+            </svg>
+        </div>
+    </div>
+
+</body>
+
+</html>
