@@ -191,7 +191,7 @@ eta_turbine = st.sidebar.slider("Turbine Efficiency", 0.5, 1.0, 0.85, step=0.01)
 st.sidebar.subheader("Gas Cycle (Brayton)")
 rp = st.sidebar.slider("Compressor Pressure Ratio", 2.0, 20.0, 8.0, step=0.5)
 eta_comp = st.sidebar.slider("Compressor Efficiency", 0.5, 1.0, 0.88, step=0.01)
-T3 = st.sidebar.number_input("Turbine Inlet Temperature (K)", value=1200.0, min_value=800.0, max_value=2000.0, step=10.0)
+T3 = st.sidebar.number_input("Turbine Inlet Temperature (K)", value=1450.0, min_value=800.0, max_value=2000.0, step=10.0)
 
 analyze = st.sidebar.button("🚀 Analyze System")
 
@@ -200,14 +200,14 @@ analyze = st.sidebar.button("🚀 Analyze System")
 # ==========================================================
 def run_simulation(m_biomass, MC, LHV, boiler_p, boiler_T, cond_p, rp, eta_comp, eta_turbine, T3):
     # ---------- 1-2 Mass splits (Inputs 1 & 2)
-    m_dry = m_biomass * (1 - MC)           # kg/s
-    m_moisture = m_biomass * MC            # kg/s
+    m_dry = m_biomass * (1 - MC)  # kg/s
+    m_moisture = m_biomass * MC  # kg/s
 
     # ---------- 3-6 Energy inputs (Input 3 LHV)
     # Convert LHV to kJ/kg
-    LHV_kJ = LHV * 1000.0                  # kJ/kg
+    LHV_kJ = LHV * 1000.0  # kJ/kg
     # Fuel energy input (Brayton) from dry biomass
-    Q_in_Brayton = m_dry * LHV_kJ          # kJ/s (kW)
+    Q_in_Brayton = m_dry * LHV_kJ  # kJ/s (kW)
     # Rankine heat input from moisture (uses enthalpy difference below)
     # Boiler enthalpy approximations (h3) will be computed later; placeholder for now
     # Q_in_Rankine computed after h3,h2 are known
@@ -215,7 +215,7 @@ def run_simulation(m_biomass, MC, LHV, boiler_p, boiler_T, cond_p, rp, eta_comp,
     # ---------- Brayton cycle (Inputs 7,8,9,10)
     gamma = 1.4
     Cp = 1.005  # kJ/kg.K (approx for air)
-    R = 0.287   # kJ/kg.K
+    R = 0.287  # kJ/kg.K
     T1 = 298.15  # K ambient
     P1 = 0.1013  # MPa ambient
     P2 = P1 * rp
@@ -275,24 +275,34 @@ def run_simulation(m_biomass, MC, LHV, boiler_p, boiler_T, cond_p, rp, eta_comp,
     if h4 < h1:
         h4 = h1 + 50.0
 
-    # Rankine heat input and turbine work based on moisture-derived steam
-    Q_in_Rankine = m_moisture * (h3 - h2)   # kJ/s
-    W_turbine_rankine = m_moisture * (h3 - h4)     # kJ/s
-    W_pump = W_pump_per_kg * m_moisture       # kJ/s
+    # Heat recovery from Brayton exhaust
+    HRSG_eff = 0.85  # Heat recovery steam generator efficiency
+    Q_exhaust = working_flow * Cp * (T4 - T1)  # Waste heat available in exhaust
+    Q_in_Rankine = HRSG_eff * Q_exhaust  # Heat transferred to Rankine cycle
 
-    # Rankine efficiency
-    eta_rankine = (W_turbine_rankine - W_pump) / Q_in_Rankine if Q_in_Rankine > 0 else 0.0
+    # Steam mass flow determined by available heat
+    m_steam = Q_in_Rankine / (h3 - h2) if (h3 - h2) > 0 else 0.0
 
-    # ---------- Combined cycle
-    total_input_energy = Q_in_Brayton + Q_in_Rankine
-    total_output_work = max(0.0, W_net_brayton) + max(0.0, W_turbine_rankine)
-    eta_combined = total_output_work / total_input_energy if total_input_energy > 0 else 0.0
+    W_turbine_rankine = m_steam * (h3 - h4)  # kJ/s
+    W_pump = W_pump_per_kg * m_steam  # kJ/s
+    W_net_rankine = W_turbine_rankine - W_pump
+
+    # Rankine efficiency (based on heat input to Rankine)
+    eta_rankine = W_net_rankine / Q_in_Rankine if Q_in_Rankine > 0 else 0.0
+
+    # ---------- Combined cycle - CORRECTED!
+    # Only the fuel input is the original energy source
+    total_fuel_input = Q_in_Brayton  # Only fuel energy, NOT adding recovered heat
+    total_output_work = max(0.0, W_net_brayton) + max(0.0, W_net_rankine)
+
+    # CORRECT: Divide total work by ONLY the fuel input
+    eta_combined = total_output_work / total_fuel_input if total_fuel_input > 0 else 0.0
 
     # ---------- Energy flow analysis (Sankey data)
     Q_fuel = Q_in_Brayton  # kJ/s ~ kW
     Q_steam = Q_in_Rankine
     useful_work = total_output_work
-    losses = Q_fuel + Q_steam - useful_work
+    losses = Q_fuel - useful_work  # Losses are fuel minus useful work
 
     # ---------- Gas production (AD-HTC empirical approximations)
     gas_A = 0.568 * (rp / 8.0) ** 0.7 * (T3 / 1200.0) ** 0.5  # kg/hr
@@ -302,7 +312,7 @@ def run_simulation(m_biomass, MC, LHV, boiler_p, boiler_T, cond_p, rp, eta_comp,
 
     # ---------- Derived power outputs (kW)
     brayton_power = max(0.0, W_net_brayton)  # kJ/s -> kW
-    rankine_power = max(0.0, W_turbine_rankine - W_pump)  # kJ/s -> kW
+    rankine_power = max(0.0, W_net_rankine)  # kJ/s -> kW
     total_power = brayton_power + rankine_power
 
     # ---------- Fuel consumption (kg/hr) using LHV_kJ
@@ -325,6 +335,7 @@ def run_simulation(m_biomass, MC, LHV, boiler_p, boiler_T, cond_p, rp, eta_comp,
         "W_turb_brayton": W_turbine_brayton,
         "W_turb_rankine": W_turbine_rankine,
         "W_pump": W_pump,
+        "W_net_rankine": W_net_rankine,  # Added this
         # 11 Net work
         "W_net_brayton": W_net_brayton,
         # 12-14 Efficiencies
