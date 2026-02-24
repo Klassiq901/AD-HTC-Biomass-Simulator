@@ -538,7 +538,7 @@ with dashboard_tab:
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        custom_metric("Rankine Efficiency", f"{results['eta_rankine'] * 100:.2f}", "%")
+        custom_metric("Steam Cycle Efficiency", f"{results['eta_rankine'] * 100:.2f}", "%")
     with col2:
         custom_metric("Brayton Efficiency", f"{results['eta_brayton'] * 100:.2f}", "%")
     with col3:
@@ -569,7 +569,7 @@ with dashboard_tab:
 
     # Rankine h-s Diagram (UNCHANGED)
     with col10:
-        st.subheader("h-s Diagram (Rankine Cycle)")
+        st.subheader("h-s Diagram (Steam Cycle)")
         fig1, ax1 = plt.subplots(figsize=(8, 6))
         fig1.patch.set_facecolor('#0f172a')
         ax1.set_facecolor('#0f172a')
